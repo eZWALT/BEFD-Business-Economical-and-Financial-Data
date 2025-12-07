@@ -73,12 +73,19 @@ plot(g2, se=T)
 AIC(g2)
 
 
+### DIFFICULT TO SEE A PATTERN (PERIODICTY AND TRENDS VISIBLE THOUGH) BUT FOR SURE ITS NOT WHITE NOISE
+### WE SHOULD HANDLE THE TREND, ITS NOT COMPLETELY STATIONARY YET
 #######perform analysis of residuals
 tsdisplay(residuals(g1))
 aar1<- auto.arima(residuals(g1))
 
+
+# BIG SCALE and SMALL SCALE VARIATIONS, with this arima + linear residuals we will be able to capture both
+# But this can also fit to the noise of the data... So overfitting is common
 plot(as.numeric(NZ), type="l")
+# This model is less complex so its preferable
 lines(fitted(g1), col=3)
+# The combined model can be used for prediction not only explanation, but 
 lines(fitted(aar1)+ fitted(g1), col=4)
 
 ###Exercise: try also with the other variables 
@@ -90,6 +97,7 @@ library(prophet)
 
 ##2. iPhone sales
 ##data 
+setwd("/home/walterjtv/Escritorio/College/Q11/BEFD-Business-Economical-and-Financial-Data/LAB/SESSION5")
 iphone=read.csv("iphone.csv", sep=";")
 str(iphone)
 
@@ -116,7 +124,6 @@ plot(iphone$y, type="l", x=iphone$ds, ylab="", xlab="Year")
 m2=prophet(iphone,  growth="logistic") 
 
 #n.changepoints default number is 25
-
 summary(m2)
  
 ##create a future 'window' for prediction
@@ -160,6 +167,12 @@ tail(forecast2[c("ds", "yhat", "yhat_lower", "yhat_upper")])
 plot(m2, forecast2)
 dyplot.prophet(m2, forecast2) 
 
+
+
+### DIFFERENCES BETWEEN BASS AND PROPHET IN THIS DATA:
+# 1. Predictions are smoother 
+# 2. With bass we assume its going to follow a structure over time...
+# so bass model is cumulative data and prophet instateneous
 ################################################################
 ###Generalized Additive Models######
 ###############################################
@@ -192,7 +205,7 @@ for(i in c(1,2,5,6)){
   hist(data[,i], col="orange", main=paste(colnames(data)[i]), xlab="")
 }
 
-#transform quantitative variables in log scale
+#transform quantitative variables in log scale (To make them more symmetric and scaled)
 data$budget <- log(data$budget)
 data$popularity <- log(data$popularity)
 data$revenue <- log(data$revenue)
@@ -226,12 +239,12 @@ data.test[,c(3,7, 10:24)]= lapply(data.test[,c(3,7, 10:24)],factor)
 str(data.train)
 
 ####Linear Model######################
-
+# THEY ARE HIGHLY CORRELATED SO WE MUST ELIMINATE IT FROM THE MODEL 
 m1 <- lm(vote_average~.-vote_classes, data=data.train)
 
 summary(m1)
 
-# Stepwise Regression
+# Stepwise Regression (AIC criterion), both senses means adding and subtracting variables
 m2 <- step(m1, direction="both")
 summary(m2)
 
